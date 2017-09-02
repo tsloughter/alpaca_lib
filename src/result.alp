@@ -1,0 +1,54 @@
+{- Basic result type.
+ -}
+module result
+
+import_type option.option
+
+export isOk/1, map/1, fromOption/2, andThen/2, withDefault/2
+
+export_type result
+
+type result 'a 'b = Ok 'a | Err 'b
+
+let isOk r =
+  match r with
+    Ok _ -> true
+  | Err _ -> false
+
+test "Applying `isOk` to Ok x should return true" =
+  assert.equal (true) (isOk (Ok 1))
+
+let map f (Ok x) = Ok (f x)
+
+let map _ (Err x) = Err x
+
+test "mapping the identity function to Ok x should return Ok x" =
+  let f x = x in
+  assert.equal (Ok 1) (map f (Ok 1))
+
+let fromOption opt e =
+  match opt with
+    Some x -> Ok x
+  | None -> Err e
+
+let andThen callback (Ok value) = callback value
+let andThen _ (Err msg) = Err msg
+
+test "andThen test with Ok x" =
+  let f x = (Ok x) in
+  assert.equal (Ok 1) (andThen f (Ok 1))
+
+test "andThen with Err x and identity function is Err x" =
+  let f x = (Ok x) in
+  assert.equal (Err "msg") (andThen f (Err "msg"))
+
+let withDefault _ (Ok x) = x
+let withDefault default (Err _) = default
+
+test "withdefault test with Ok result" =
+  let f x = (Ok x) in
+  assert.equal (1) (withDefault 0 (f 1))
+
+test "withdefault test with Err returning default" =
+  let f _ = (Err "error") in
+  assert.equal (0) (withDefault 0 (f 1))
